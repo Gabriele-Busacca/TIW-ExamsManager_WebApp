@@ -2,7 +2,7 @@ package it.polimi.tiw.tiwproject2024purehtml.beans;
 
 public class Studente extends Utente {
     private int matricola;
-    private String corso_laurea;
+    private String corsoLaurea;
 
     public int getMatricola() {
         return matricola;
@@ -11,10 +11,10 @@ public class Studente extends Utente {
         this.matricola = matricola;
     }
 
-    public String getCorso_laurea() {
-        return corso_laurea;
+    public String getCorsoLaurea() {
+        return corsoLaurea;
     }
-    public void setCorso_laurea(String corso_laurea) {
-        this.corso_laurea = corso_laurea;
+    public void setCorsoLaurea(String corsoLaurea) {
+        this.corsoLaurea = corsoLaurea;
     }
 }

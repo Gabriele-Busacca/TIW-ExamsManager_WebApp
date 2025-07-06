@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home Docente</title>
+</head>
+<body>
+    <h1>Lista dei Corsi</h1>
+
+    <ul>
+        <li th:each="corso : ${corsi}" th:text="'ID: ' + ${corso.idCorso} + ' - ' + ${corso.nome}"></li>
+
+    </ul>
+</body>
+</html>
