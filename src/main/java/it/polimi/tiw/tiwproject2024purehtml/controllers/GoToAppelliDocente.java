@@ -1,8 +1,8 @@
 package it.polimi.tiw.tiwproject2024purehtml.controllers;
 
+import it.polimi.tiw.tiwproject2024purehtml.beans.Appello;
 import it.polimi.tiw.tiwproject2024purehtml.beans.Corso;
-import it.polimi.tiw.tiwproject2024purehtml.beans.Utente;
-import it.polimi.tiw.tiwproject2024purehtml.dao.CorsoDAO;
+import it.polimi.tiw.tiwproject2024purehtml.dao.AppelloDAO;
 import it.polimi.tiw.tiwproject2024purehtml.utility.ConnectionHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -20,15 +21,16 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet("/GoToHomeStudente")
-public class GoToHomeStudente extends HttpServlet {
+@WebServlet("/GoToAppelliDocente")
+public class GoToAppelliDocente extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection =  null;
     private TemplateEngine templateEngine;
 
-    public GoToHomeStudente() {
+    public GoToAppelliDocente() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -53,32 +55,63 @@ public class GoToHomeStudente extends HttpServlet {
             response.sendRedirect(path);
             return;
         }
-        Utente u =  (Utente) session.getAttribute("utente");
-        CorsoDAO corsoDAO = new CorsoDAO(connection);
-        List<Corso> corsi = null;
+
+        String nomeCorso = null;
+        int idCorso;
+
+        //controllo parametri
         try {
-            corsi = corsoDAO.getCorsiByIdStudente(u.getId());
-            if (corsi == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Resource not found");
-                return;
-            }
+            idCorso = Integer.parseInt(request.getParameter("idCorso"));
+        } catch (NumberFormatException | NullPointerException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Incorrect or missing param values");
+            return;
+        }
+        nomeCorso = StringEscapeUtils.escapeJava(request.getParameter("nomeCorso"));
+        if(nomeCorso == null || nomeCorso.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Incorrect or missing param values");
+            return;
+        }
+
+        //controllo accessi non autorizzati
+        List<Corso> corsi = (List<Corso>) request.getSession().getAttribute("corsi");
+
+        boolean autorizzato = corsi.stream().anyMatch(c -> c.getIdCorso() == idCorso);
+
+        if (!autorizzato) {
+            String path = "ErrorPage.html";
+            IWebExchange webExchange = JakartaServletWebApplication
+                    .buildApplication(getServletContext())
+                    .buildExchange(request, response);
+
+            WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
+            ctx.setVariable("error", "ACCESSO NON AUTORIZZATO");
+            ctx.setVariable("description", "Hai tentato di accedere ad una risorsa non tua!");
+            templateEngine.process(path, ctx, response.getWriter());
+            session.invalidate();
+            return;
+        }
+
+        AppelloDAO appelloDAO = new AppelloDAO(connection);
+        List<Appello> appelli;
+
+        try {
+            appelli = appelloDAO.getAppellibyCorsoPerDocente(idCorso);
         } catch (SQLException e) {
             String errorMessage = e.getMessage();
             response.sendError(HttpServletResponse.SC_BAD_GATEWAY, errorMessage);
             return;
         }
 
-        request.getSession().setAttribute("corsi", corsi);
-        String path = "HomeStudente.html";
+        String path = "AppelliDocente.html";
         IWebExchange webExchange = JakartaServletWebApplication
                 .buildApplication(getServletContext())
                 .buildExchange(request, response);
 
         WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
-        ctx.setVariable("corsi", corsi);
-        if (corsi.isEmpty()) {
-            ctx.setVariable("errorMsg", "Non ci sono corsi");
-        }
+        ctx.setVariable("nomeCorso", nomeCorso);
+        ctx.setVariable("idCorso", idCorso);
+        ctx.setVariable("appelli", appelli);
+
         templateEngine.process(path, ctx, response.getWriter());
     }
 

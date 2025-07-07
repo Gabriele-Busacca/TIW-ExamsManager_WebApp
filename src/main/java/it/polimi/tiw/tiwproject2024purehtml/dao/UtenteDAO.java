@@ -15,7 +15,7 @@ public class UtenteDAO {
     }
 
     public Utente checkCredentials(String email, String hashedPassword) throws SQLException {
-        String query = "SELECT id, ruolo FROM utente WHERE email = ? AND password = ?";
+        String query = "SELECT id, nome, cognome, ruolo FROM utente WHERE email = ? AND password = ?";
         try (PreparedStatement preparedStatement = con.prepareStatement(query)) {
             preparedStatement.setString(1, email);
             preparedStatement.setString(2, hashedPassword);
@@ -26,6 +26,8 @@ public class UtenteDAO {
                     result.next();
                     Utente utente = new Utente();
                     utente.setId(result.getInt("id"));
+                    utente.setNome(result.getString("nome"));
+                    utente.setCognome(result.getString("cognome"));
                     utente.setRuolo(result.getString("ruolo"));
                     return utente;
                 }

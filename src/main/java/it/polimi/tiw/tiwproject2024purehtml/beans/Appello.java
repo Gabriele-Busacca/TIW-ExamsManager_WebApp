@@ -1,11 +1,12 @@
 package it.polimi.tiw.tiwproject2024purehtml.beans;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 public class Appello {
     private int idAppello;
     private int idCorso;
-    private LocalDate data;
+    private Date data;
 
     public int getIdAppello() {
         return idAppello;
@@ -21,10 +22,10 @@ public class Appello {
         this.idCorso = idCorso;
     }
 
-    public LocalDate getData() {
+    public Date getData() {
         return data;
     }
-    public void setData(LocalDate data) {
+    public void setData(Date data) {
         this.data = data;
     }
 }

@@ -1,10 +1,9 @@
 package it.polimi.tiw.tiwproject2024purehtml.controllers;
 
 import it.polimi.tiw.tiwproject2024purehtml.beans.Corso;
-import it.polimi.tiw.tiwproject2024purehtml.beans.Docente;
+import it.polimi.tiw.tiwproject2024purehtml.beans.Utente;
 import it.polimi.tiw.tiwproject2024purehtml.dao.CorsoDAO;
 import it.polimi.tiw.tiwproject2024purehtml.utility.ConnectionHandler;
-import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -54,11 +53,11 @@ public class GoToHomeDocente extends HttpServlet {
             response.sendRedirect(path);
             return;
         }
-        Docente d =  (Docente) session.getAttribute("utente");
+        Utente u =  (Utente) session.getAttribute("utente");
         CorsoDAO corsoDAO = new CorsoDAO(connection);
         List<Corso> corsi = null;
         try {
-            corsi = corsoDAO.getCorsibyIdDocente(d.getId());
+            corsi = corsoDAO.getCorsiByIdDocente(u.getId());
             if (corsi == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Resource not found");
                 return;
@@ -81,5 +80,17 @@ public class GoToHomeDocente extends HttpServlet {
             ctx.setVariable("errorMsg", "Non ci sono corsi");
         }
         templateEngine.process(path, ctx, response.getWriter());
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doGet(request, response);
+    }
+
+    public void destroy() {
+        try {
+            ConnectionHandler.closeConnection(connection);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

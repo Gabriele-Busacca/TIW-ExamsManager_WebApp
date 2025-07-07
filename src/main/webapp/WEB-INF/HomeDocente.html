@@ -5,11 +5,39 @@
     <title>Home Docente</title>
 </head>
 <body>
-    <h1>Lista dei Corsi</h1>
+<div>
 
-    <ul>
-        <li th:each="corso : ${corsi}" th:text="'ID: ' + ${corso.idCorso} + ' - ' + ${corso.nome}"></li>
+    <form action="LogOut" method="get">
+        <button class=logoutbutton type="submit">logout &#10008;</button>
+    </form>
 
-    </ul>
+    <h1>Benvenuto nella HomePage Docenti</h1>
+    <p th:text="${'Bentornato ' + session.utente.nome + ' ' + session.utente.cognome}"></p>
+
+    <div>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Corso</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${corsi}">
+                <td th:text="${c.idCorso}"></td>
+                <td>
+                    <form action="GoToAppelliDocente" method="get">
+                        <input type="hidden" name="nomeCorso" th:value="${c.nome}" />
+                        <button name="idCorso" type="submit"
+                                th:value="${c.idCorso}" th:text="${c.nome}"></button>
+                    </form>
+                </td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 </body>
 </html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Appelli del Corso</title>
+</head>
+<body>
+<h1 th:text="'Appelli del corso: ' + ${nomeCorso}">Nome corso</h1>
+<p>ID Corso: <span th:text="${idCorso}">1</span></p>
+
+<h2>Elenco Appelli:</h2>
+<ul>
+  <li th:each="appello : ${appelli}">
+    Appello ID: <span th:text="${appello.idAppello}">1</span> -
+    Data: <span th:text="${appello.data}">2025-07-15</span>
+  </li>
+</ul>
+</body>
+</html>

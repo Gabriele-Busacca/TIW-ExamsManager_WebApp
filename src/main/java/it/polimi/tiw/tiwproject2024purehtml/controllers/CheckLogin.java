@@ -1,10 +1,6 @@
 package it.polimi.tiw.tiwproject2024purehtml.controllers;
 
-import it.polimi.tiw.tiwproject2024purehtml.beans.Docente;
-import it.polimi.tiw.tiwproject2024purehtml.beans.Studente;
 import it.polimi.tiw.tiwproject2024purehtml.beans.Utente;
-import it.polimi.tiw.tiwproject2024purehtml.dao.DocenteDAO;
-import it.polimi.tiw.tiwproject2024purehtml.dao.StudenteDAO;
 import it.polimi.tiw.tiwproject2024purehtml.dao.UtenteDAO;
 import it.polimi.tiw.tiwproject2024purehtml.utility.ConnectionHandler;
 import it.polimi.tiw.tiwproject2024purehtml.utility.PasswordUtil;
@@ -51,6 +47,10 @@ public class CheckLogin extends HttpServlet {
         this.templateEngine.setTemplateResolver(templateResolver);
     }
 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
@@ -67,6 +67,7 @@ public class CheckLogin extends HttpServlet {
         try {
             utente = uDAO.checkCredentials(email, hashedPassword);
         } catch (SQLException e) {
+            e.printStackTrace();
             response.sendError(HttpServletResponse.SC_BAD_GATEWAY, "Failure in database credential checking");
             return;
         }
@@ -84,22 +85,16 @@ public class CheckLogin extends HttpServlet {
         }
 
         // Autenticazione riuscita
-        String target;
-        Object utenteFinale;
-        try {
-            if (utente.getRuolo().equals("docente")) {
-                DocenteDAO docenteDAO = new DocenteDAO(connection);
-                utenteFinale = docenteDAO.findDocenteById(utente.getId());
-                target = "/GoToHomeDocente";
-            } else {
-                StudenteDAO studenteDAO = new StudenteDAO(connection);
-                utenteFinale = studenteDAO.findStudenteById(utente.getId());
-                target = "/GoToHomeStudente";
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Errore nel recupero dell'utente specializzato", e);
+        String target = "";
+        request.getSession().setAttribute("utente", utente);
+        if (utente.getRuolo().equals("studente")) {
+            target = "/GoToHomeStudente";
         }
-        request.getSession().setAttribute("utente", utenteFinale);
+        else if (utente.getRuolo().equals("docente")) {
+            target = "/GoToHomeDocente";
+        } else {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Undefined user");
+        }
         response.sendRedirect(getServletContext().getContextPath() + target);
     }
 
