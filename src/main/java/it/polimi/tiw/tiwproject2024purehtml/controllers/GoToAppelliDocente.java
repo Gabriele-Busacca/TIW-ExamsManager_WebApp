@@ -24,7 +24,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet("/GoToAppelliDocente")
+@WebServlet("/docente/GoToAppelli")
 public class GoToAppelliDocente extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection =  null;
@@ -50,11 +50,6 @@ public class GoToAppelliDocente extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
-        if (session.isNew() || session.getAttribute("utente") == null) {
-            String path = getServletContext().getContextPath() + "/login.html";
-            response.sendRedirect(path);
-            return;
-        }
 
         String nomeCorso = null;
         int idCorso;

@@ -6,10 +6,9 @@
 </head>
 <body>
 <div>
-  <!--
-  <form action="LogOut" method="get">
-      <button class=logoutbutton type="submit">logout &#10008;</button>
-  </form> -->
+  <form action="Logout" method="get">
+      <button type="submit">logout &#10008;</button>
+  </form>
   <h1>Benvenuto nella HomePage Studenti</h1>
   <p th:text="${'Bentornato ' + session.utente.nome + ' ' + session.utente.cognome}"></p>
   <p>Corsi ai quali sei iscritto regolarmente:</p>
@@ -26,7 +25,7 @@
       <tr th:each="c : ${corsi}">
         <td th:text="${c.idCorso}"></td>
         <td>
-          <form action="GoToAppelliStudente" method="get">
+          <form th:action="@{/studente/GoToAppelli}" method="get">
             <input type="hidden" name="nomeCorso" th:value="${c.nome}" />
             <button name="idCorso" type="submit"
                     th:value="${c.idCorso}" th:text="${c.nome}"></button>

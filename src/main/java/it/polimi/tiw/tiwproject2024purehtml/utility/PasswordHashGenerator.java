@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class PasswordHashGenerator {
     public static void main(String [] args) throws NoSuchAlgorithmException {
-        String password = "password2";
+        String password = "password5";
         MessageDigest digest = null;
         try {
             digest = MessageDigest.getInstance("SHA-1");

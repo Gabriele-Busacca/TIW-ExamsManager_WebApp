@@ -22,7 +22,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-@WebServlet("/GoToHomeStudente")
+@WebServlet("/studente/GoToHome")
 public class GoToHomeStudente extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection =  null;
@@ -48,11 +48,7 @@ public class GoToHomeStudente extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
-        if (session.isNew() || session.getAttribute("utente") == null) {
-            String path = getServletContext().getContextPath() + "/login.html";
-            response.sendRedirect(path);
-            return;
-        }
+
         Utente u =  (Utente) session.getAttribute("utente");
         CorsoDAO corsoDAO = new CorsoDAO(connection);
         List<Corso> corsi = null;

@@ -24,7 +24,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-@WebServlet("/GoToAppelliStudente")
+@WebServlet("/studente/GoToAppelli")
 public class GoToAppelliStudente extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection =  null;
@@ -50,11 +50,6 @@ public class GoToAppelliStudente extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
-        if (session.isNew() || session.getAttribute("utente") == null) {
-            String path = getServletContext().getContextPath() + "/login.html";
-            response.sendRedirect(path);
-            return;
-        }
 
         Utente utente = (Utente) session.getAttribute("utente");
         String nomeCorso = null;
@@ -72,7 +67,7 @@ public class GoToAppelliStudente extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Incorrect or missing param values");
             return;
         }
-        /*
+
         //controllo accessi non autorizzati
         List<Corso> corsi = (List<Corso>) request.getSession().getAttribute("corsi");
 
@@ -91,7 +86,6 @@ public class GoToAppelliStudente extends HttpServlet {
             session.invalidate();
             return;
         }
-         */
 
         AppelloDAO  appelloDAO = new AppelloDAO(connection);
         List<Appello> appelli;

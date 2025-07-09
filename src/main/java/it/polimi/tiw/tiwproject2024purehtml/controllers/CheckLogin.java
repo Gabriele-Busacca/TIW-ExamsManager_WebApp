@@ -88,10 +88,10 @@ public class CheckLogin extends HttpServlet {
         String target = "";
         request.getSession().setAttribute("utente", utente);
         if (utente.getRuolo().equals("studente")) {
-            target = "/GoToHomeStudente";
+            target = "/studente/GoToHome";
         }
         else if (utente.getRuolo().equals("docente")) {
-            target = "/GoToHomeDocente";
+            target = "/docente/GoToHome";
         } else {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Undefined user");
         }

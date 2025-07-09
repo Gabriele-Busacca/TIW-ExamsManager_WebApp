@@ -59,9 +59,25 @@ public class AppelloDAO {
                 }
             }
         }
-
         return appelli;
     }
 
+    public boolean CheckAppelloByDocente(int idDocente, int idAppello) throws SQLException {
+        boolean check;
+        String query = """
+        SELECT *
+        FROM appello
+        JOIN corso ON appello.idCorso = corso.idCorso
+        WHERE corso.idDocente = ? AND appello.idAppello = ?
+        """;
+        try (PreparedStatement pstatement = connection.prepareStatement(query);) {
+            pstatement.setInt(1, idDocente);
+            pstatement.setInt(2, idAppello);
+            try(ResultSet result = pstatement.executeQuery();) {
+                check = result.isBeforeFirst();
+            }
+        }
+        return check;
+    }
 
 }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Iscritti all'appello</title>
+</head>
+<body>
+<h2>Lista iscritti</h2>
+<table border="1">
+    <thead>
+    <tr>
+        <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'matricola'}&sortOrder=${sortBy == 'matricola' ? nextSortOrder : 'asc'}|}">Matricola</a></th>
+        <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'cognome'}&sortOrder=${sortBy == 'cognome' ? nextSortOrder : 'asc'}|}">Cognome</a></th>
+        <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'nome'}&sortOrder=${sortBy == 'nome' ? nextSortOrder : 'asc'}|}">Nome</a></th>
+        <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'email'}&sortOrder=${sortBy == 'email' ? nextSortOrder : 'asc'}|}">Email</a></th>
+        <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'corso_laurea'}&sortOrder=${sortBy == 'corso_laurea' ? nextSortOrder : 'asc'}|}">Corso di Laurea</a></th>
+        <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'voto'}&sortOrder=${sortBy == 'voto' ? nextSortOrder : 'asc'}|}">Voto</a></th>
+        <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'stato'}&sortOrder=${sortBy == 'stato' ? nextSortOrder : 'asc'}|}">Stato</a></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="i : ${iscritti}">
+        <td th:text="${i.matricola}"></td>
+        <td th:text="${i.cognome}"></td>
+        <td th:text="${i.nome}"></td>
+        <td th:text="${i.email}"></td>
+        <td th:text="${i.corso_laurea}"></td>
+        <td th:text="${i.voto.getLabel()}"></td>
+        <td th:text="${i.stato.getLabel()}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
