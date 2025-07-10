@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Warning</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #fff8f0; color: #333; padding: 20px;">
+
+<div style="max-width: 800px; margin: 0 auto; text-align: center; border: 2px solid #f00; padding: 30px; border-radius: 10px; background-color: #ffe6e6;">
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+        <form action="Logout" method="get">
+            <button type="submit" style="background-color: #ff4d4d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                Logout &#10008;
+            </button>
+        </form>
+        <form>
+            <input type="button" value="Go back &#11144;" onclick="history.back()"
+                   style="background-color: #4d94ff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;" />
+        </form>
+    </div>
+
+    <div>
+        <h1 style="color: red; font-size: 3em; margin-bottom: 10px;">WARNING</h1>
+        <h1 th:text="${error}" style="font-size: 2em;"></h1>
+        <br>
+        <h2 th:text="${description}" style="font-size: 1.5em; color: #555;"></h2>
+    </div>
+</div>
+
+</body>
+</html>

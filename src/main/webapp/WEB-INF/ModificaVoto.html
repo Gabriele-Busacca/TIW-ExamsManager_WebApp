@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifica Voto</title>
+</head>
+<form action="Logout" method="get">
+    <button type="submit">logout &#10008;</button>
+</form>
+<form th:action="@{/docente/GoToIscrittiAppello}" method="get">
+    <input type="hidden" name="idAppello" th:value="${idAppello}" />
+    <button type="submit">go back &#11144;</button>
+</form>
+<body>
+    <div>
+        <h1>Modifica Voto</h1>
+        <h3 th:text="|Cambia il voto di ${studente.nome} ${studente.cognome}: appello di giorno ${data}|"></h3>
+
+        <div>
+            <table>
+                <thead>
+                <tr>
+                    <th>Matricola</th>
+                    <th>Nome</th>
+                    <th>Cognome</th>
+                    <th>Corso Laurea</th>
+                    <th>Email</th>
+                    <th>Voto</th>
+                    <th>Stato</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td th:text="${studente.matricola}"></td>
+                    <td th:text="${studente.nome}"></td>
+                    <td th:text="${studente.cognome}"></td>
+                    <td th:text="${studente.corso_laurea}"></td>
+                    <td th:text="${studente.email}"></td>
+                    <td th:text="${studente.voto.getLabel()}"></td>
+                    <td th:text="${studente.stato.getLabel()}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <br> <br> <br>
+        <div>
+            <br><br><br>
+            <h4>Cambia il voto</h4>
+        </div>
+        <div>
+            <table>
+                <thead>
+                <tr>
+                    <th>Matricola</th>
+                    <th>Cognome</th>
+                    <th>Nome</th>
+                    <th>Nuovo Voto</th>
+                    <th>Opzione</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td th:text="${studente.matricola}"></td>
+                    <td th:text="${studente.cognome}"></td>
+                    <td th:text="${studente.nome}"></td>
+                    <td colspan="2"> <!-- unisco le due colonne: selezione + submit -->
+                        <form th:action="@{/docente/UpdateVoto}" method="post" style="display: flex; gap: 10px; align-items: center;">
+                            <select name="voto" id="voto" required>
+                                <option value="" selected="selected"></option>
+                                <option th:each="v : ${voti}"
+                                        th:value="${v.label}"
+                                        th:text="${v.label}">
+                                </option>
+                            </select>
+
+                            <input type="hidden" name="idAppello" th:value="${idAppello}" />
+                            <input type="hidden" name="matricola" th:value="${studente.matricola}" />
+
+                            <button type="submit">INSERISCI</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

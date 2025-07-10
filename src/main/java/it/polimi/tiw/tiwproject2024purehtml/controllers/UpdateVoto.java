@@ -1,9 +1,9 @@
 package it.polimi.tiw.tiwproject2024purehtml.controllers;
 
-import it.polimi.tiw.tiwproject2024purehtml.beans.DettaglioIscrizioneStudente;
+
 import it.polimi.tiw.tiwproject2024purehtml.beans.Utente;
+import it.polimi.tiw.tiwproject2024purehtml.beans.Voto;
 import it.polimi.tiw.tiwproject2024purehtml.dao.AppelloDAO;
-import it.polimi.tiw.tiwproject2024purehtml.dao.IscrizioneAppelloDAO;
 import it.polimi.tiw.tiwproject2024purehtml.utility.ConnectionHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -21,16 +22,14 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
 
-@WebServlet("/docente/GoToIscrittiAppello")
-public class GoToIscrittiAppello extends HttpServlet {
+@WebServlet("/docente/UpdateVoto")
+public class UpdateVoto extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection =  null;
     private TemplateEngine templateEngine;
 
-    public GoToIscrittiAppello() {
+    public UpdateVoto() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -48,71 +47,66 @@ public class GoToIscrittiAppello extends HttpServlet {
         this.templateEngine.setTemplateResolver(templateResolver);
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
+        int matricola;
         int idAppello;
+        String votoParam;
+
+        //check formato parametri
         try {
+            matricola = Integer.parseInt(request.getParameter("matricola"));
             idAppello = Integer.parseInt(request.getParameter("idAppello"));
         } catch (NumberFormatException | NullPointerException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Incorrect or missing param values");
             return;
         }
-        String sortBy = Optional.ofNullable(request.getParameter("sortBy")).orElse("cognome");
-        String sortOrder = Optional.ofNullable(request.getParameter("sortOrder")).orElse("asc");
-        String nextSortOrder = "asc".equals(sortOrder) ? "desc" : "asc";
-
-        // Whitelist per la sicurezza
-        List<String> allowedFields = List.of("matricola", "cognome", "nome", "email", "corso_laurea", "voto", "stato");
-        if (!allowedFields.contains(sortBy)) sortBy = "cognome";
-        if (!List.of("asc", "desc").contains(sortOrder)) sortOrder = "asc";
+        votoParam = StringEscapeUtils.escapeJava(request.getParameter("voto"));
+        if(votoParam == null || votoParam.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Incorrect or missing param values");
+            return;
+        }
+        Voto voto;
+        try {
+            voto = Voto.fromString(votoParam);
+        } catch (IllegalArgumentException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid vote value");
+            return;
+        }
 
         AppelloDAO appelloDAO = new AppelloDAO(connection);
         Utente utente = (Utente) session.getAttribute("utente");
+        IWebExchange webExchange = JakartaServletWebApplication
+                .buildApplication(getServletContext())
+                .buildExchange(request, response);
+
+        WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
 
         try {
-            if (!appelloDAO.checkAppelloByDocente(utente.getId(), idAppello)) {
+            if (appelloDAO.checkAppelloByDocente(utente.getId(), idAppello)) {
+                if (appelloDAO.inserisciVoto(idAppello, matricola, voto) == 0) {
+                    String path = "ErrorPage.html";
+                    ctx.setVariable("error", "MODIFICA NON CONCESSA");
+                    ctx.setVariable("description", "Hai tentato di modificare un voto pubblicato, rifiutato o verbalizzato!");
+                    templateEngine.process(path, ctx, response.getWriter());
+                    session.invalidate();
+                    return;
+                }
+            } else {
                 String path = "ErrorPage.html";
-                IWebExchange webExchange = JakartaServletWebApplication
-                        .buildApplication(getServletContext())
-                        .buildExchange(request, response);
-
-                WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
                 ctx.setVariable("error", "ACCESSO NON AUTORIZZATO");
                 ctx.setVariable("description", "Hai tentato di accedere ad una risorsa non tua!");
                 templateEngine.process(path, ctx, response.getWriter());
                 session.invalidate();
                 return;
             }
-        } catch (NumberFormatException | NullPointerException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Incorrect param values");
-            return;
         } catch (SQLException e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "DB Error");
             return;
         }
 
-        IscrizioneAppelloDAO dao  = new IscrizioneAppelloDAO(connection);
-        List<DettaglioIscrizioneStudente> iscritti;
-        try {
-            iscritti = dao.getIscrittiByAppelloSorted(idAppello, sortBy, sortOrder);
-        } catch (SQLException e) {
-            String errorMessage = e.getMessage();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
-            return;
-        }
-
-        String path = "IscrittiAppello.html";
-        IWebExchange webExchange = JakartaServletWebApplication
-                .buildApplication(getServletContext())
-                .buildExchange(request, response);
-
-        WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
-        ctx.setVariable("iscritti", iscritti);
-        ctx.setVariable("idAppello", idAppello);
-        ctx.setVariable("sortBy", sortBy);
-        ctx.setVariable("sortOrder", sortOrder);
-        ctx.setVariable("nextSortOrder", nextSortOrder);
-        templateEngine.process(path, ctx, response.getWriter());
+        String path = getServletContext().getContextPath();
+        response.sendRedirect(path + "/docente/GoToModifica?idAppello=" + idAppello + "&matricola=" + matricola);
 
     }
 }

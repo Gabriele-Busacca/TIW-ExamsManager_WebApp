@@ -15,6 +15,7 @@
         <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'corso_laurea'}&sortOrder=${sortBy == 'corso_laurea' ? nextSortOrder : 'asc'}|}">Corso di Laurea</a></th>
         <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'voto'}&sortOrder=${sortBy == 'voto' ? nextSortOrder : 'asc'}|}">Voto</a></th>
         <th><a th:href="@{|/docente/GoToIscrittiAppello?idAppello=${idAppello}&sortBy=${'stato'}&sortOrder=${sortBy == 'stato' ? nextSortOrder : 'asc'}|}">Stato</a></th>
+        <th>Modifica</th>
     </tr>
     </thead>
     <tbody>
@@ -26,6 +27,19 @@
         <td th:text="${i.corso_laurea}"></td>
         <td th:text="${i.voto.getLabel()}"></td>
         <td th:text="${i.stato.getLabel()}"></td>
+        <td>
+            <form th:action="@{/docente/GoToModifica}" method="get">
+                <input type="hidden" name="idAppello" th:value="${idAppello}" />
+                <input type="hidden" name="matricola" th:value="${i.matricola}" />
+                <div>
+                    <button th:if="${i.stato.getLabel() == 'verbalizzato' or i.stato.getLabel() == 'rifiutato' or i.stato.getLabel() == 'pubblicato'}"
+                            type="button" disabled>Modifica</button>
+
+                    <button th:unless="${i.stato.getLabel() == 'verbalizzato' or i.stato.getLabel() == 'rifiutato' or i.stato.getLabel() == 'pubblicato'}"
+                            type="submit">Modifica</button>
+                </div>
+            </form>
+        </td>
     </tr>
     </tbody>
 </table>

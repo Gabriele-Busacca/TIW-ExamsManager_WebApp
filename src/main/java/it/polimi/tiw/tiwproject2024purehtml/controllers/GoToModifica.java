@@ -2,8 +2,9 @@ package it.polimi.tiw.tiwproject2024purehtml.controllers;
 
 import it.polimi.tiw.tiwproject2024purehtml.beans.DettaglioIscrizioneStudente;
 import it.polimi.tiw.tiwproject2024purehtml.beans.Utente;
+import it.polimi.tiw.tiwproject2024purehtml.beans.Voto;
 import it.polimi.tiw.tiwproject2024purehtml.dao.AppelloDAO;
-import it.polimi.tiw.tiwproject2024purehtml.dao.IscrizioneAppelloDAO;
+import it.polimi.tiw.tiwproject2024purehtml.dao.DettaglioIscrizioneStudenteDAO;
 import it.polimi.tiw.tiwproject2024purehtml.utility.ConnectionHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -21,16 +22,18 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
-@WebServlet("/docente/GoToIscrittiAppello")
-public class GoToIscrittiAppello extends HttpServlet {
+@WebServlet("/docente/GoToModifica")
+public class GoToModifica extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection =  null;
     private TemplateEngine templateEngine;
 
-    public GoToIscrittiAppello() {
+    public GoToModifica() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -50,22 +53,18 @@ public class GoToIscrittiAppello extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
+        int matricola;
         int idAppello;
+        //check formato parametri
         try {
+            matricola = Integer.parseInt(request.getParameter("matricola"));
             idAppello = Integer.parseInt(request.getParameter("idAppello"));
         } catch (NumberFormatException | NullPointerException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Incorrect or missing param values");
             return;
         }
-        String sortBy = Optional.ofNullable(request.getParameter("sortBy")).orElse("cognome");
-        String sortOrder = Optional.ofNullable(request.getParameter("sortOrder")).orElse("asc");
-        String nextSortOrder = "asc".equals(sortOrder) ? "desc" : "asc";
 
-        // Whitelist per la sicurezza
-        List<String> allowedFields = List.of("matricola", "cognome", "nome", "email", "corso_laurea", "voto", "stato");
-        if (!allowedFields.contains(sortBy)) sortBy = "cognome";
-        if (!List.of("asc", "desc").contains(sortOrder)) sortOrder = "asc";
-
+        //check accesso a risorsa altrui
         AppelloDAO appelloDAO = new AppelloDAO(connection);
         Utente utente = (Utente) session.getAttribute("utente");
 
@@ -91,28 +90,65 @@ public class GoToIscrittiAppello extends HttpServlet {
             return;
         }
 
-        IscrizioneAppelloDAO dao  = new IscrizioneAppelloDAO(connection);
-        List<DettaglioIscrizioneStudente> iscritti;
+        //check se si può modificare il voto
+        boolean isModifiable = false;
         try {
-            iscritti = dao.getIscrittiByAppelloSorted(idAppello, sortBy, sortOrder);
+            isModifiable = appelloDAO.checkModificaVoto(idAppello, matricola);
+        } catch (SQLException e) {
+            String errorMessage = e.getMessage();
+            response.sendError(HttpServletResponse.SC_BAD_GATEWAY, errorMessage);
+            return;
+        }
+
+        IWebExchange webExchange = JakartaServletWebApplication
+                .buildApplication(getServletContext())
+                .buildExchange(request, response);
+
+        WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
+
+        if(!isModifiable){
+            String path = "WarningPage.html";
+            ctx.setVariable("error", "Non è possibile modificare il voto.");
+            ctx.setVariable("description", "Controlla che la matricola dello studente sia corretta o che lo stato della valutazione sia 'non inserito' o 'inserito'");
+            templateEngine.process(path, ctx, response.getWriter());
+            return;
+        }
+
+        DettaglioIscrizioneStudenteDAO disDAO =  new DettaglioIscrizioneStudenteDAO(connection);
+        DettaglioIscrizioneStudente studente = new DettaglioIscrizioneStudente();
+        try {
+            studente = disDAO.getStudenteIscritto(idAppello, matricola);
         } catch (SQLException e) {
             String errorMessage = e.getMessage();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
             return;
         }
 
-        String path = "IscrittiAppello.html";
-        IWebExchange webExchange = JakartaServletWebApplication
-                .buildApplication(getServletContext())
-                .buildExchange(request, response);
+        ctx.setVariable("studente", studente);
 
-        WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
-        ctx.setVariable("iscritti", iscritti);
+        Date data;
+        try {
+            data = appelloDAO.getDataByIdAppello(idAppello);
+        } catch (SQLException e) {
+            String errorMessage = e.getMessage();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
+            return;
+        }
+        ctx.setVariable("data", data);
         ctx.setVariable("idAppello", idAppello);
-        ctx.setVariable("sortBy", sortBy);
-        ctx.setVariable("sortOrder", sortOrder);
-        ctx.setVariable("nextSortOrder", nextSortOrder);
+        List<Voto> votiFiltrati = Arrays.stream(it.polimi.tiw.tiwproject2024purehtml.beans.Voto.values())
+                .filter(v -> !v.getLabel().isEmpty())  // o .filter(v -> !v.name().isEmpty()) se getLabel() non c'è
+                .toList();
+
+        ctx.setVariable("voti", votiFiltrati);
+
+
+        String path = "ModificaVoto.html";
         templateEngine.process(path, ctx, response.getWriter());
 
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doGet(request, response);
     }
 }
