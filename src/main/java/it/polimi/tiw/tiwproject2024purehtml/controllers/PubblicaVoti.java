@@ -1,6 +1,5 @@
 package it.polimi.tiw.tiwproject2024purehtml.controllers;
 
-import it.polimi.tiw.tiwproject2024purehtml.beans.DettaglioIscrizioneStudente;
 import it.polimi.tiw.tiwproject2024purehtml.beans.Utente;
 import it.polimi.tiw.tiwproject2024purehtml.dao.AppelloDAO;
 import it.polimi.tiw.tiwproject2024purehtml.dao.IscrizioneAppelloDAO;
@@ -21,16 +20,14 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
 
-@WebServlet("/docente/GoToIscrittiAppello")
-public class GoToIscrittiAppello extends HttpServlet {
+@WebServlet("/docente/PubblicaVoti")
+public class PubblicaVoti extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection =  null;
     private TemplateEngine templateEngine;
 
-    public GoToIscrittiAppello() {
+    public PubblicaVoti() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -48,8 +45,9 @@ public class GoToIscrittiAppello extends HttpServlet {
         this.templateEngine.setTemplateResolver(templateResolver);
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
+
         int idAppello;
         try {
             idAppello = Integer.parseInt(request.getParameter("idAppello"));
@@ -57,15 +55,8 @@ public class GoToIscrittiAppello extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Incorrect or missing param values");
             return;
         }
-        String sortBy = Optional.ofNullable(request.getParameter("sortBy")).orElse("cognome");
-        String sortOrder = Optional.ofNullable(request.getParameter("sortOrder")).orElse("asc");
-        String nextSortOrder = "asc".equals(sortOrder) ? "desc" : "asc";
 
-        // Whitelist per la sicurezza
-        List<String> allowedFields = List.of("matricola", "cognome", "nome", "email", "corso_laurea", "voto", "stato");
-        if (!allowedFields.contains(sortBy)) sortBy = "cognome";
-        if (!List.of("asc", "desc").contains(sortOrder)) sortOrder = "asc";
-
+        //check accesso a risorsa altrui
         AppelloDAO appelloDAO = new AppelloDAO(connection);
         Utente utente = (Utente) session.getAttribute("utente");
 
@@ -91,46 +82,39 @@ public class GoToIscrittiAppello extends HttpServlet {
             return;
         }
 
-        IscrizioneAppelloDAO dao  = new IscrizioneAppelloDAO(connection);
-        List<DettaglioIscrizioneStudente> iscritti;
-        try {
-            iscritti = dao.getIscrittiByAppelloSorted(idAppello, sortBy, sortOrder);
-        } catch (SQLException e) {
-            String errorMessage = e.getMessage();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
-            return;
-        }
-
-        boolean pubblicabile = false;
-        try {
-            pubblicabile = dao.checkVotiInseriti(idAppello);
-        } catch (SQLException e) {
-            String errorMessage = e.getMessage();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
-            return;
-        }
-
-
-
-        String path = "IscrittiAppello.html";
         IWebExchange webExchange = JakartaServletWebApplication
                 .buildApplication(getServletContext())
                 .buildExchange(request, response);
 
         WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
 
-        String successMessage = (String) session.getAttribute("success");
-        if (successMessage != null) {
-            ctx.setVariable("success", successMessage);
-            session.removeAttribute("success");
+        IscrizioneAppelloDAO iaDAO = new IscrizioneAppelloDAO(connection);
+        int righeModificate = 0;
+        try {
+            if (iaDAO.checkVotiInseriti(idAppello)) {
+                righeModificate = iaDAO.pubblicaVoti(idAppello);
+            } else {
+                String path = "WarningPage.html";
+                ctx.setVariable("error", "Non è possibile pubblicare il voto.");
+                ctx.setVariable("description", "Nessun voto ha stato 'INSERITO'");
+                templateEngine.process(path, ctx, response.getWriter());
+                return;
+            }
+        } catch (SQLException e) {
+            String errorMessage = e.getMessage();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
+            return;
         }
-        ctx.setVariable("iscritti", iscritti);
-        ctx.setVariable("idAppello", idAppello);
-        ctx.setVariable("sortBy", sortBy);
-        ctx.setVariable("sortOrder", sortOrder);
-        ctx.setVariable("nextSortOrder", nextSortOrder);
-        ctx.setVariable("pubblicabile", pubblicabile);
-        templateEngine.process(path, ctx, response.getWriter());
+
+        if (righeModificate > 0) {
+            session.setAttribute("success", righeModificate + " voti pubblicati con successo");
+        } else {
+            session.setAttribute("success", "Nessun voto da pubblicare");
+        }
+
+        request.getSession().setAttribute("success", righeModificate + " voti pubblicati con successo");
+
+        response.sendRedirect(request.getContextPath() + "/docente/GoToIscrittiAppello?idAppello=" + idAppello);
 
     }
 }

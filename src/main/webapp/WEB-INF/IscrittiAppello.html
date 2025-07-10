@@ -43,5 +43,14 @@
     </tr>
     </tbody>
 </table>
+<div>
+    <form th:action="@{/docente/PubblicaVoti}" method="post">
+        <input type="hidden" name="idAppello" th:value="${idAppello}" />
+        <button type="submit" th:disabled="${!pubblicabile}" > PUBBLICA </button>
+    </form>
+</div>
+<div th:if="${success}" role="alert">
+    <span th:text="${success}"></span>
+</div>
 </body>
 </html>

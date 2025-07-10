@@ -53,4 +53,30 @@ public class IscrizioneAppelloDAO {
 
         return iscritti;
     }
+
+    public boolean checkVotiInseriti(int idAppello) throws SQLException {
+        String query = """
+        SELECT COUNT(*)
+        FROM iscrizioneAppello
+        WHERE idAppello = ? AND stato = 'inserito'
+    """;
+
+        try (PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setInt(1, idAppello);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                return count > 0;
+            }
+            return false;
+        }
+    }
+
+    public int pubblicaVoti(int idAppello) throws SQLException {
+        String query = "UPDATE iscrizioneAppello SET stato = 'pubblicato' WHERE idAppello = ? AND stato = 'inserito'";
+        try (PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setInt(1, idAppello);
+            return ps.executeUpdate(); // restituisce il numero di righe aggiornate
+        }
+    }
 }
