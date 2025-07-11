@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pagina Verbale</title>
+</head>
+<form action="Logout" method="get">
+  <button type="submit">logout&#10008;</button>
+</form>
+
+<form th:action="@{${returnPage == 'verbali' ? '/docente/GoToVerbali' : '/docente/GoToIscrittiAppello'}}" method="get">
+  <input type="hidden" name="idAppello" th:value="${idAppello}" />
+  <button type="submit">go back &#11144;</button>
+</form>
+
+<body>
+<div>
+  <h1>Dettaglio Verbale</h1>
+  <p
+          th:utext="${'Documento n. ' + idVerbale + ' - creato in data ' + data + ' alle ' + ora +
+			  '<br />' +  'Codice Appello: ' + idAppello +
+			   ' relativo al corso di ' + nomeCorso + ' tenuto dal professor ' + docente}"></p>
+
+  <div>
+    <table>
+      <thead>
+      <tr>
+        <th>Matricola</th>
+        <th>Cognome</th>
+        <th>Nome</th>
+        <th>Voto</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="s : ${studenti}">
+        <td th:text="${s.matricola}"></td>
+        <td th:text="${s.cognome}"></td>
+        <td th:text="${s.nome}"></td>
+        <td th:text="${s.voto.getLabel()}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -147,4 +147,61 @@ public class AppelloDAO {
         }
         return row;
     }
+
+    public boolean hasVerbalizzabili(int idAppello) throws SQLException {
+        String query = "SELECT COUNT(*) FROM iscrizioneAppello WHERE idAppello = ? AND stato IN ('pubblicato', 'rifiutato')";
+        try (PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setInt(1, idAppello);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    return count > 0;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
+
+    public void verbalizzaIscritti(int idAppello) throws SQLException {
+        String updatePubblicati = "UPDATE iscrizioneAppello SET stato = 'verbalizzato' WHERE idAppello = ? AND stato = 'pubblicato'";
+        String updateRifiutati = "UPDATE iscrizioneAppello SET stato = 'verbalizzato', voto = 'rimandato' WHERE idAppello = ? AND stato = 'rifiutato'";
+
+        try {
+            connection.setAutoCommit(false); // Inizio transazione
+
+            try (PreparedStatement ps1 = connection.prepareStatement(updatePubblicati)) {
+                ps1.setInt(1, idAppello);
+                ps1.executeUpdate();
+            }
+
+            try (PreparedStatement ps2 = connection.prepareStatement(updateRifiutati)) {
+                ps2.setInt(1, idAppello);
+                ps2.executeUpdate();
+            }
+
+            connection.commit(); // Fine transazione
+
+        } catch (SQLException e) {
+            connection.rollback(); // In caso di errore
+            throw e;
+        } finally {
+            connection.setAutoCommit(true); // Ripristino comportamento di default
+        }
+    }
+
+    public String getNomeCorsoByAppello(int idAppello) throws SQLException {
+        String query = "SELECT c.nome FROM corso c JOIN appello a ON c.idCorso = a.idCorso WHERE a.idAppello = ?";
+        try (PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setInt(1, idAppello);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("nome");
+                } else {
+                    throw new SQLException("Nessun corso trovato per l'appello con id " + idAppello);
+                }
+            }
+        }
+    }
+
 }

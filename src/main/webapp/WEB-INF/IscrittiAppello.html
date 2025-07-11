@@ -52,5 +52,15 @@
 <div th:if="${success}" role="alert">
     <span th:text="${success}"></span>
 </div>
+<div>
+    <form th:action="@{/docente/VerbalizzaVoti}" method="post">
+        <input type="hidden" name="idAppello" th:value="${idAppello}" />
+        <button type="submit" th:disabled="${!verbalizzabile}"> VERBALIZZA </button>
+    </form>
+</div>
 </body>
+
+<div>
+    <a th:href="@{/docente/GoToHome}">Torna alla Home</a>
+</div>
 </html>

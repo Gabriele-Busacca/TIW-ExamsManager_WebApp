@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Verbali creati</title>
+</head>
+<body>
+<h1>Lista Verbali</h1>
+
+<table border="1">
+  <thead>
+  <tr>
+    <th>Corso</th>
+    <th>Data</th>
+    <th>Ora</th>
+    <th>Id Appello</th>
+    <th>Azioni</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="v : ${verbali}">
+    <td th:text="${v.nomeCorso}">Nome corso</td>
+    <td th:text="${#dates.format(v.dataOra, 'dd-MM-yyyy')}">Data</td>
+    <td th:text="${#dates.format(v.dataOra, 'HH:mm')}">Ora</td>
+    <td th:text="${v.idAppello}">ID</td>
+    <td>
+      <a th:href="@{'/docente/VerbalizzaVoti?idVerbale=' + ${v.idVerbale}}">
+        Visualizza Verbale
+      </a>
+    </td>
+  </tr>
+  </tbody>
+</table>
+<div>
+  <a th:href="@{/docente/GoToHome}">Torna alla Home</a>
+</div>
+
+</body>
+</html>

@@ -79,4 +79,18 @@ public class IscrizioneAppelloDAO {
             return ps.executeUpdate(); // restituisce il numero di righe aggiornate
         }
     }
+
+    public boolean checkVerbalizzabile(int idAppello) throws SQLException {
+        String query = "SELECT COUNT(*) FROM iscrizioneAppello WHERE idAppello = ? AND stato IN ('pubblicato', 'rifiutato')";
+        try (PreparedStatement pstm = connection.prepareStatement(query)) {
+            pstm.setInt(1, idAppello);
+            try (ResultSet rs = pstm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+                return false;
+            }
+        }
+    }
+
 }

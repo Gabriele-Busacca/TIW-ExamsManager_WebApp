@@ -110,7 +110,14 @@ public class GoToIscrittiAppello extends HttpServlet {
             return;
         }
 
-
+        boolean verbalizzabile =  false;
+        try {
+            verbalizzabile = dao.checkVerbalizzabile(idAppello);
+        } catch (SQLException e) {
+            String errorMessage = e.getMessage();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
+            return;
+        }
 
         String path = "IscrittiAppello.html";
         IWebExchange webExchange = JakartaServletWebApplication
@@ -130,6 +137,8 @@ public class GoToIscrittiAppello extends HttpServlet {
         ctx.setVariable("sortOrder", sortOrder);
         ctx.setVariable("nextSortOrder", nextSortOrder);
         ctx.setVariable("pubblicabile", pubblicabile);
+        ctx.setVariable("verbalizzabile", verbalizzabile);
+
         templateEngine.process(path, ctx, response.getWriter());
 
     }

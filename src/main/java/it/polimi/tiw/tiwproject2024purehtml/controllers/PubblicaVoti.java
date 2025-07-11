@@ -56,6 +56,12 @@ public class PubblicaVoti extends HttpServlet {
             return;
         }
 
+        IWebExchange webExchange = JakartaServletWebApplication
+                .buildApplication(getServletContext())
+                .buildExchange(request, response);
+
+        WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
+
         //check accesso a risorsa altrui
         AppelloDAO appelloDAO = new AppelloDAO(connection);
         Utente utente = (Utente) session.getAttribute("utente");
@@ -63,11 +69,6 @@ public class PubblicaVoti extends HttpServlet {
         try {
             if (!appelloDAO.checkAppelloByDocente(utente.getId(), idAppello)) {
                 String path = "ErrorPage.html";
-                IWebExchange webExchange = JakartaServletWebApplication
-                        .buildApplication(getServletContext())
-                        .buildExchange(request, response);
-
-                WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
                 ctx.setVariable("error", "ACCESSO NON AUTORIZZATO");
                 ctx.setVariable("description", "Hai tentato di accedere ad una risorsa non tua!");
                 templateEngine.process(path, ctx, response.getWriter());
@@ -81,12 +82,6 @@ public class PubblicaVoti extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "DB Error");
             return;
         }
-
-        IWebExchange webExchange = JakartaServletWebApplication
-                .buildApplication(getServletContext())
-                .buildExchange(request, response);
-
-        WebContext ctx = new WebContext(webExchange, webExchange.getLocale());
 
         IscrizioneAppelloDAO iaDAO = new IscrizioneAppelloDAO(connection);
         int righeModificate = 0;
